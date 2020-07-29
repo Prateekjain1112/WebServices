@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
-
 import com.webservices.playground.models.User;
 
 @Component
@@ -28,11 +27,15 @@ public class UserDaoService {
 	
 	public User findUserById(int id) {
 		int i = 0;
-		for (i = 0; i < userList.size(); i++) {
-			if(userList.get(i).getId() == id) {
-				break;
+		if (!userList.isEmpty()) {
+			for (i = 0; i < userList.size(); i++) {
+				if(userList.get(i).getId() == id) {
+					break;
+				}
 			}
-		}
+		} else
+			return null;
+		
 		return userList.get(i);
 	}
 }

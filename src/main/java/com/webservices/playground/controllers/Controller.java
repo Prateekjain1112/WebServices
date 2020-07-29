@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.webservices.playground.exceptions.UserNotFoundException;
 import com.webservices.playground.models.Model;
 import com.webservices.playground.models.User;
 import com.webservices.playground.services.UserDaoService;
@@ -49,7 +50,12 @@ public class Controller {
 	
 	@GetMapping(path = "/users/{id}")
 	public User getUser(@PathVariable int id) {
-		return userDaoService.findUserById(id);
+		User user = userDaoService.findUserById(id);
+		if(user == null) {
+			//Throw an error and return status code 404
+			throw new UserNotFoundException("The user with id : " + id + " is not available.");
+		}
+		return user;
 	}
 	
 	@PostMapping(path = "/users")
