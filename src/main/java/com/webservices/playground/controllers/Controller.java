@@ -1,13 +1,16 @@
 package com.webservices.playground.controllers;
 
+import java.net.URI;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.webservices.playground.models.Model;
 import com.webservices.playground.models.User;
@@ -37,10 +40,7 @@ public class Controller {
 		return new Model("Hello", 2);
 	}
 	
-	@PostMapping(path = "/users")
-	public User addUser(@RequestBody User user) {
-		return userDaoService.save(user);
-	}
+	//Request methods for USER
 	
 	@GetMapping(path = "/users")
 	public List<User> getAllUser() {
@@ -50,5 +50,19 @@ public class Controller {
 	@GetMapping(path = "/users/{id}")
 	public User getUser(@PathVariable int id) {
 		return userDaoService.findUserById(id);
+	}
+	
+	@PostMapping(path = "/users")
+	public ResponseEntity<User> addUser(@RequestBody User user) {
+		User newUser = userDaoService.save(user);
+		
+		/**
+		 * As a best practice, 
+		 * 1. The API need not return the created resource in the Response Stream. 
+		 * 2. It should return an empty response body. 
+		 * 3. Instead the API must return a HTTP Status 201 indicating the resource (location URI) was created.
+		 */
+		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(newUser.getId()).toUri();
+		return ResponseEntity.created(location).build();
 	}
 }
