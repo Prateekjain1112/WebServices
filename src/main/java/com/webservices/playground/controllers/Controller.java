@@ -1,7 +1,9 @@
 package com.webservices.playground.controllers;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +16,9 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.webservices.playground.exceptions.UserNotFoundException;
 import com.webservices.playground.models.Model;
+import com.webservices.playground.models.Post;
 import com.webservices.playground.models.User;
+import com.webservices.playground.services.PostDaoService;
 import com.webservices.playground.services.UserDaoService;
 
 @RestController
@@ -22,6 +26,9 @@ public class Controller {
 	
 	@Autowired
 	private UserDaoService userDaoService;
+	
+	@Autowired
+	private PostDaoService postDaoService;
 	
 	//A simple end point
 	@GetMapping(path = "/helloMessage")
@@ -41,7 +48,10 @@ public class Controller {
 		return new Model("Hello", 2);
 	}
 	
+	
+	//#####################################################################
 	//Request methods for USER
+	//#####################################################################
 	
 	@GetMapping(path = "/users")
 	public List<User> getAllUser() {
@@ -69,6 +79,47 @@ public class Controller {
 		 * 3. Instead the API must return a HTTP Status 201 indicating the resource (location URI) was created.
 		 */
 		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(newUser.getId()).toUri();
+		return ResponseEntity.created(location).build();
+	}
+	
+	
+	//#####################################################################
+	//Request methods for user's POSTS
+	//#####################################################################
+	
+	@GetMapping(path = "/users/{id}/posts")
+	public List<Post> getAllPostsOfUser(@PathVariable int id) {
+		List<Post> posts = postDaoService.findAllPostsByUserId(id);
+		if(posts == null) {
+			throw new UserNotFoundException("The user with id : " + id + " is not available.");
+		}
+		return posts;
+	}
+	
+	@GetMapping(path = "/users/{id}/posts/{postId}")
+	public Post getPostByIdOfUser(@PathVariable int id, @PathVariable int postId) throws Exception {
+		Post post = postDaoService.findPostbyId(id, postId);
+		if(post == null) {
+			throw new Exception("The user with id : " + id + " or post with id : "+ postId + " is not available.");
+		}
+		return post;
+	}
+	
+	@GetMapping(path = "/posts")
+	public Map<Integer, ArrayList<Post>> getAllPosts() throws Exception {
+		Map<Integer, ArrayList<Post>> posts = postDaoService.findAllPosts();
+		return posts;
+	}
+	
+	@PostMapping(path = "/users/{id}/posts")
+	public ResponseEntity<Post> addPostOfUser(@PathVariable int id, @RequestBody Post post) throws Exception{
+		Post p = postDaoService.addPostByUserId(id, post);
+		
+		if(post == null) {
+			throw new Exception("The user with id : " + id + " is not available or post is null.");
+		}
+			
+		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{postId}").buildAndExpand(p.getId()).toUri();
 		return ResponseEntity.created(location).build();
 	}
 }
